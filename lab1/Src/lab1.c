@@ -1,5 +1,6 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
+#include "assert.h"
 
 void SystemClock_Config(void);
 
@@ -15,14 +16,21 @@ int main(void)
   SystemClock_Config();
 
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  assert((RCC->AHBENR & RCC_AHBENR_GPIOCEN) != 0);
+
   GPIO_InitTypeDef initStr = {GPIO_PIN_8 | GPIO_PIN_9, GPIO_MODE_OUTPUT_PP,
                                 GPIO_SPEED_FREQ_LOW, GPIO_NOPULL};
   HAL_GPIO_Init(GPIOC, &initStr);
+  assert((GPIOC->MODER & ((0x3 << (8*2)) | (0x3 << (9*2)))) != 0);
+
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+  assert(GPIOC->ODR & GPIO_PIN_8);
+
   while (1)
   {
-    HAL_Delay(200);
+    HAL_Delay(100);
     HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
+    //assert(GPIOC->MODER == GPIO_PIN_8 | GPIO_PIN_9);
   }
   return -1;
 }
