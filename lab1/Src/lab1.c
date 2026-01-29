@@ -21,10 +21,10 @@ int main(void)
   GPIO_InitTypeDef initStr = {GPIO_PIN_8 | GPIO_PIN_9, GPIO_MODE_OUTPUT_PP,
                                 GPIO_SPEED_FREQ_LOW, GPIO_NOPULL};
   HAL_GPIO_Init(GPIOC, &initStr);
-  assert((GPIOC->MODER & ((0x3 << (8*2)) | (0x3 << (9*2)))) != 0);
+  assert((GPIOC->MODER & ((0x3 << (8*2)) | (0x3 << (9*2)))) == 0x50000);
 
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
-  assert(GPIOC->ODR & GPIO_PIN_8);
+  assert((GPIOC->ODR & (0x3 << 8)) == (0x1 << 8)); // bit 8 = 1, bit 9 = 0
 
   while (1)
   {
