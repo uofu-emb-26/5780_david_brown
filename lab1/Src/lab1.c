@@ -1,6 +1,7 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
 #include "assert.h"
+#include "hal_gpio.h"
 
 void SystemClock_Config(void);
 
@@ -16,26 +17,26 @@ int main(void)
   SystemClock_Config();
 
   // Enable the GPIOC clock in the RCC
-  __HAL_RCC_GPIOC_CLK_ENABLE();
+  HAL_RCC_GPIOC_CLK_Enable();
   assert((RCC->AHBENR & RCC_AHBENR_GPIOCEN) != 0);
 
   // Set up a configuration struct to pass to the initialization function
   GPIO_InitTypeDef initStr = {GPIO_PIN_8 | GPIO_PIN_9, GPIO_MODE_OUTPUT_PP,
                                 GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
 
-  HAL_GPIO_Init(GPIOC, &initStr);   // Initialize pins PC8 & PC9
-  assert((GPIOC->MODER & ((0x3 << (8*2)) | (0x3 << (9*2)))) == 0x50000); // Bit 8 and 9 set to output mode
+  //HAL_GPIO_Init(GPIOC, &initStr);   // Initialize pins PC8 & PC9
+  My_HAL_GPIO_Init(GPIOC, &initStr);
+  assert((GPIOC->MODER & ((0x3 << (6*2)) | (0x3 << (7*2)))) == 0x5000); // Bit 6 and 7 set to output mode
 
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET); // Start PC8 high
-  assert((GPIOC->ODR & (0x3 << 8)) == (0x1 << 8)); // bit 8 = 1, bit 9 = 0
+  My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Start PC8 high
+  assert( (GPIOC->ODR & (1 << 6)) && !(GPIOC->ODR & (1 << 7)) );
 
   while (1)
   {
     HAL_Delay(100); // Delay 200ms
 
     // Toggle the output state of both PC8 and PC9
-    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
-    //assert(GPIOC->MODER == GPIO_PIN_8 | GPIO_PIN_9);
+    My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6 | GPIO_PIN_7);
   }
   return -1;
 }
