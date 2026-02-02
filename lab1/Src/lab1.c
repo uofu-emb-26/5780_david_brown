@@ -2,6 +2,7 @@
 #include "stm32f0xx_hal.h"
 #include "assert.h"
 #include "hal_gpio.h"
+#include "stm32f0xx_hal_gpio.h"
 
 void SystemClock_Config(void);
 

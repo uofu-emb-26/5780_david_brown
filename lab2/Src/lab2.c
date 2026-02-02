@@ -1,5 +1,8 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
+#include "hal_gpio_L2.h"
+#include "assert.h"
+
 
 void SystemClock_Config(void);
 
@@ -14,9 +17,33 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
+  HAL_RCC_GPIOC_CLK_Enable();
+  assert((RCC->AHBENR & RCC_AHBENR_GPIOCEN) != 0);
+
+  // LED Pins INIT string
+  GPIO_InitTypeDef pin6Init = {GPIO_PIN_6, GPIO_MODE_OUTPUT_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
+  GPIO_InitTypeDef pin7Init = {GPIO_PIN_7, GPIO_MODE_OUTPUT_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
+  GPIO_InitTypeDef pin8Init = {GPIO_PIN_8, GPIO_MODE_OUTPUT_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
+  GPIO_InitTypeDef pin9Init = {GPIO_PIN_9, GPIO_MODE_OUTPUT_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW}; 
+  
+  // Initialize LED's                             
+  My_HAL_GPIO_Init(GPIOC, &pin6Init);
+  My_HAL_GPIO_Init(GPIOC, &pin7Init);
+  My_HAL_GPIO_Init(GPIOC, &pin8Init);
+  My_HAL_GPIO_Init(GPIOC, &pin9Init);
+  assert((GPIOC->MODER & ((0x3 << (6*2)) | (0x3 << (7*2)) | (0x3 << (8*2)) | (0x3 << (9*2)))) == 0x55000);
+
+  My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+  assert( (GPIOC->ODR & (1 << 9)) && !(GPIOC->ODR & (1 << 8)) && !(GPIOC->ODR & (1 << 6)));
+
   while (1)
   {
- 
+    HAL_Delay(400);
+    My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
   }
   return -1;
 }
@@ -67,6 +94,10 @@ void Error_Handler(void)
   while (1)
   {
   }
+}
+
+void HAL_RCC_GPIOC_CLK_Enable() {
+  RCC->AHBENR = RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
 }
 
 #ifdef USE_FULL_ASSERT
