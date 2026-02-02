@@ -24,18 +24,18 @@ int main(void)
   GPIO_InitTypeDef initStr = {GPIO_PIN_8 | GPIO_PIN_9, GPIO_MODE_OUTPUT_PP,
                                 GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
 
-  //HAL_GPIO_Init(GPIOC, &initStr);   // Initialize pins PC8 & PC9
+  //HAL_GPIO_Init(GPIOC, &initStr);   // Initialize pins PC6 & PC7
   My_HAL_GPIO_Init(GPIOC, &initStr);
   assert((GPIOC->MODER & ((0x3 << (6*2)) | (0x3 << (7*2)))) == 0x5000); // Bit 6 and 7 set to output mode
 
-  My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Start PC8 high
+  My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Start PC6 high
   assert( (GPIOC->ODR & (1 << 6)) && !(GPIOC->ODR & (1 << 7)) );
 
   while (1)
   {
     HAL_Delay(100); // Delay 200ms
 
-    // Toggle the output state of both PC8 and PC9
+    // Toggle the output state of both PC6 and PC7
     My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6 | GPIO_PIN_7);
   }
   return -1;
@@ -77,7 +77,7 @@ void SystemClock_Config(void)
 }
 
 void HAL_RCC_GPIOC_CLK_Enable() {
-  RCC->AHBENR = RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+  RCC->AHBENR = RCC->AHBENR |= RCC_AHBENR_GPIOCEN | RCC_AHBENR_GPIOAEN;
 }
 
 /**

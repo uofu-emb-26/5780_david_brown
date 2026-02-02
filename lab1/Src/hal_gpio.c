@@ -14,11 +14,19 @@ void My_HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
     // HAL_GPIO_Init(GPIOA, &initStrPA0);
     
     // Set Blue and Red LED's registers
-    GPIOC->MODER &= ~((3 << 12) | (3 << 14));  // clear both pairs
-    GPIOC->MODER |=  ((1 << 12) | (1 << 14)); // set to output // Set moder to general purpose output mode
-    GPIOC->OTYPER &= ~((1 << 6) | (1 << 7)); // Set OTYPER to push-pull output mode
-    GPIOC->OSPEEDR &= ~((1 << 12) | (1 << 14)); // Set pins to low speed in the OSPEEDR register
-    GPIOC->PUPDR &= ~((1 << 12) | (1 << 13) | (1 << 14) | (1 << 15)); // Sets to no pull-up/down resistors in PUPDR register
+    if(GPIOx == GPIOC) {
+        GPIOx->MODER &= ~((3 << 12) | (3 << 14));  // clear both pairs
+        GPIOx->MODER |=  ((1 << 12) | (1 << 14)); // set to output // Set moder to general purpose output mode
+        GPIOx->OTYPER &= ~((1 << 6) | (1 << 7)); // Set OTYPER to push-pull output mode
+        GPIOx->OSPEEDR &= ~((1 << 12) | (1 << 14)); // Set pins to low speed in the OSPEEDR register
+        GPIOx->PUPDR &= ~((1 << 12) | (1 << 13) | (1 << 14) | (1 << 15)); // Sets to no pull-up/down resistors in PUPDR register
+    }
+    if(GPIOx == GPIOA) {
+        GPIOx -> MODER &= ~(3);
+        GPIOx -> OSPEEDR &= ~(3);
+        GPIOx -> PUPDR &= ~(3);
+        GPIOx -> PUPDR |= (2);
+    }
     
     // else if(GPIOx == GPIOA) {
 
