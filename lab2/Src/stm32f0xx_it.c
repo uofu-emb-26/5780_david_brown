@@ -4,7 +4,7 @@
 #include "hal_gpio_L2.h"
 
 //Interrupt Count
-int ic = 0;
+volatile int ic = 0;
 
 /******************************************************************************/
 /*           Cortex-M0 Processor Interruption and Exception Handlers          */

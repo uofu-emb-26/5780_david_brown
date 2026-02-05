@@ -5,6 +5,7 @@
 
 
 void SystemClock_Config(void);
+volatile int iCount = 0;
 
 /**
   * @brief  The application entry point.
@@ -56,7 +57,8 @@ int main(void)
   assert((SYSCFG->EXTICR[0]) == 0);
 
   __NVIC_EnableIRQ(EXTI0_1_IRQn);
-  __NVIC_SetPriority(EXTI0_1_IRQn, 1);
+  __NVIC_SetPriority(EXTI0_1_IRQn, 3);
+  __NVIC_SetPriority(SysTick_IRQn, 2);
 
   while (1)
   {
@@ -120,9 +122,16 @@ void HAL_RCC_GPIOC_CLK_Enable() {
 
 void EXTI0_1_IRQHandler(void)
 {
+  // 2.1 Check off
+  My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
+  // EXTI->PR |= 1;
+
+  // 2.6 Screenshot
+  volatile int i;
+  for(i = 0; i < 1500000; i++){}
+
   My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
   EXTI->PR |= 1;
-  //__NVIC_ClearPendingIRQ(EXTI0_1_IRQn);
 }
 
 #ifdef USE_FULL_ASSERT
