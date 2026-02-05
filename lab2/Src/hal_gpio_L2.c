@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stm32f0xx_hal.h>
 #include <stm32f0xx_hal_gpio.h>
+#include "main.h"
 
 void My_HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
 {
@@ -79,5 +80,11 @@ void My_HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PinState 
 void My_HAL_GPIO_TogglePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 {
     GPIOx-> ODR ^= GPIO_Pin;
+}
+
+void Config_EXTI0() {
+    EXTI->IMR |=EXTI_IMR_IM0;
+    EXTI->RTSR |= EXTI_RTSR_RT0;
+    
 }
 

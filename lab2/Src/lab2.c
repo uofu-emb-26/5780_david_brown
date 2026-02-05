@@ -20,6 +20,12 @@ int main(void)
   HAL_RCC_GPIOC_CLK_Enable();
   assert((RCC->AHBENR & RCC_AHBENR_GPIOCEN) != 0);
 
+  // User Btn Initialization
+  GPIO_InitTypeDef pinA0Init = {GPIO_PIN_0, GPIO_MODE_INPUT,
+                                GPIO_PULLDOWN, GPIO_SPEED_FREQ_LOW};
+  My_HAL_GPIO_Init(GPIOA, &pinA0Init);                            
+  assert((GPIOA->MODER & (3U)) == 0);
+
   // LED Pins INIT string
   GPIO_InitTypeDef pin6Init = {GPIO_PIN_6, GPIO_MODE_OUTPUT_PP,
                                 GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
@@ -39,6 +45,15 @@ int main(void)
 
   My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
   assert( (GPIOC->ODR & (1 << 9)) && !(GPIOC->ODR & (1 << 8)) && !(GPIOC->ODR & (1 << 6)));
+
+  // Configure EXTI Line 0.
+  assert((EXTI->IMR & 0x7F840000) && !(EXTI->RTSR & 1)); // Assert Line 0 hasnt been configured.
+  Config_EXTI0();
+  assert((EXTI->IMR & 0x7F840001) && !(EXTI->RTSR & 1)); // Assert Line 0 has been configured.
+
+  assert(!(SYSCFG->EXTICR[0]));
+  SYSCFG->EXTICR[0] &= ~(7);
+  assert((SYSCFG->EXTICR[0]) == 0);
 
   while (1)
   {
@@ -97,7 +112,7 @@ void Error_Handler(void)
 }
 
 void HAL_RCC_GPIOC_CLK_Enable() {
-  RCC->AHBENR = RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+  RCC->AHBENR |= RCC_AHBENR_GPIOCEN | RCC_APB2ENR_SYSCFGEN;
 }
 
 #ifdef USE_FULL_ASSERT
