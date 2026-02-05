@@ -47,16 +47,16 @@ int main(void)
   assert( (GPIOC->ODR & (1 << 9)) && !(GPIOC->ODR & (1 << 8)) && !(GPIOC->ODR & (1 << 6)));
 
   // Configure EXTI Line 0.
-  assert((EXTI->IMR & 0x7F840000) && !(EXTI->RTSR & 1)); // Assert Line 0 hasnt been configured.
+  assert(!(EXTI->IMR & 1) && !(EXTI->RTSR & 1)); // Assert Line 0 hasnt been configured.
   Config_EXTI0();
-  assert((EXTI->IMR & 0x7F840001) && !(EXTI->RTSR & 1)); // Assert Line 0 has been configured.
+  assert((EXTI->IMR & 1) && (EXTI->RTSR & 1)); // Assert Line 0 has been configured.
 
   assert(!(SYSCFG->EXTICR[0]));
   SYSCFG->EXTICR[0] &= ~(7);
   assert((SYSCFG->EXTICR[0]) == 0);
 
   __NVIC_EnableIRQ(EXTI0_1_IRQn);
-  
+  __NVIC_SetPriority(EXTI0_1_IRQn, 1);
 
   while (1)
   {
@@ -116,6 +116,13 @@ void Error_Handler(void)
 
 void HAL_RCC_GPIOC_CLK_Enable() {
   RCC->AHBENR |= RCC_AHBENR_GPIOCEN | RCC_APB2ENR_SYSCFGEN;
+}
+
+void EXTI0_1_IRQHandler(void)
+{
+  My_HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
+  EXTI->PR |= 1;
+  //__NVIC_ClearPendingIRQ(EXTI0_1_IRQn);
 }
 
 #ifdef USE_FULL_ASSERT
