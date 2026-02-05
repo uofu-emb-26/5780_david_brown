@@ -55,6 +55,9 @@ int main(void)
   SYSCFG->EXTICR[0] &= ~(7);
   assert((SYSCFG->EXTICR[0]) == 0);
 
+  __NVIC_EnableIRQ(EXTI0_1_IRQn);
+  
+
   while (1)
   {
     HAL_Delay(400);
