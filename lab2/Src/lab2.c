@@ -38,10 +38,10 @@ int main(void)
                                 GPIO_NOPULL, GPIO_SPEED_FREQ_LOW}; 
   
   // Initialize LED's                             
-  My_HAL_GPIO_Init(GPIOC, &pin6Init);
-  My_HAL_GPIO_Init(GPIOC, &pin7Init);
-  My_HAL_GPIO_Init(GPIOC, &pin8Init);
-  My_HAL_GPIO_Init(GPIOC, &pin9Init);
+  My_HAL_GPIO_Init(GPIOC, &pin6Init); // Red
+  My_HAL_GPIO_Init(GPIOC, &pin7Init); // Blue
+  My_HAL_GPIO_Init(GPIOC, &pin8Init); // Orange
+  My_HAL_GPIO_Init(GPIOC, &pin9Init); // Green
   assert((GPIOC->MODER & ((0x3 << (6*2)) | (0x3 << (7*2)) | (0x3 << (8*2)) | (0x3 << (9*2)))) == 0x55000);
 
   My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
@@ -57,7 +57,7 @@ int main(void)
   assert((SYSCFG->EXTICR[0]) == 0);
 
   __NVIC_EnableIRQ(EXTI0_1_IRQn);
-  __NVIC_SetPriority(EXTI0_1_IRQn, 3);
+  __NVIC_SetPriority(EXTI0_1_IRQn, 1);
   __NVIC_SetPriority(SysTick_IRQn, 2);
 
   while (1)
