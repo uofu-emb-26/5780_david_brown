@@ -1,5 +1,8 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
+#include "hal_gpio_L3.h"
+#include "assert.h"
+#include "tim2.h"
 
 void SystemClock_Config(void);
 
@@ -13,6 +16,31 @@ int main(void)
   HAL_Init();
   /* Configure the system clock */
   SystemClock_Config();
+
+  HAL_RCC_GPIOC_CLK_Enable();
+  
+
+  // LED Pins INIT string
+  GPIO_InitTypeDef pin6Init = {GPIO_PIN_6, GPIO_MODE_OUTPUT_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
+  GPIO_InitTypeDef pin7Init = {GPIO_PIN_7, GPIO_MODE_OUTPUT_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
+  GPIO_InitTypeDef pin8Init = {GPIO_PIN_8, GPIO_MODE_OUTPUT_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
+  GPIO_InitTypeDef pin9Init = {GPIO_PIN_9, GPIO_MODE_OUTPUT_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW}; 
+  
+  // Initialize LED's                             
+  My_HAL_GPIO_Init(GPIOC, &pin6Init); // Red
+  My_HAL_GPIO_Init(GPIOC, &pin7Init); // Blue
+  My_HAL_GPIO_Init(GPIOC, &pin8Init); // Orange
+  My_HAL_GPIO_Init(GPIOC, &pin9Init); // Green
+  //assert((GPIOC->MODER & ((0x3 << (6*2)) | (0x3 << (7*2)) | (0x3 << (8*2)) | (0x3 << (9*2)))) == 0x55000);
+
+  My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+  //assert( (GPIOC->ODR & (1 << 9)) && !(GPIOC->ODR & (1 << 8)) && !(GPIOC->ODR & (1 << 6)));
+
+  tim2Config(); // Configure the TIM 2 timer.
 
   while (1)
   {
