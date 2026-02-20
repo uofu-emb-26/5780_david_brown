@@ -2,7 +2,7 @@
 #include "stm32f0xx_hal.h"
 #include "hal_gpio_L3.h"
 #include "assert.h"
-#include "tim2.h"
+#include "tim.h"
 
 void SystemClock_Config(void);
 
@@ -21,10 +21,10 @@ int main(void)
   
 
   // LED Pins INIT string
-  GPIO_InitTypeDef pin6Init = {GPIO_PIN_6, GPIO_MODE_OUTPUT_PP,
-                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
-  GPIO_InitTypeDef pin7Init = {GPIO_PIN_7, GPIO_MODE_OUTPUT_PP,
-                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
+  GPIO_InitTypeDef pin6Init = {GPIO_PIN_6, GPIO_MODE_AF_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW, GPIO_AF0_TIM3};
+  GPIO_InitTypeDef pin7Init = {GPIO_PIN_7, GPIO_MODE_AF_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW, GPIO_AF0_TIM3};
   GPIO_InitTypeDef pin8Init = {GPIO_PIN_8, GPIO_MODE_OUTPUT_PP,
                                 GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
   GPIO_InitTypeDef pin9Init = {GPIO_PIN_9, GPIO_MODE_OUTPUT_PP,
@@ -37,16 +37,33 @@ int main(void)
   My_HAL_GPIO_Init(GPIOC, &pin9Init); // Green
   //assert((GPIOC->MODER & ((0x3 << (6*2)) | (0x3 << (7*2)) | (0x3 << (8*2)) | (0x3 << (9*2)))) == 0x55000);
 
-  My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+  My_HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9 | GPIO_PIN_6 | GPIO_PIN_7, GPIO_PIN_SET);
   //assert( (GPIOC->ODR & (1 << 9)) && !(GPIOC->ODR & (1 << 8)) && !(GPIOC->ODR & (1 << 6)));
 
   tim2Config(); // Configure the TIM 2 timer.
-
+  tim3Config();
+  
   while (1)
   {
- 
+    for (int p = 0; p <= 100; p++)
+    {
+        setLedDuty(p);
+        HAL_Delay(15);
+    }
+
+    for (int p = 100; p >= 0; p--)
+    {
+        setLedDuty(p);
+        HAL_Delay(15);
+    }
   }
   return -1;
+}
+
+void setLedDuty(uint8_t percent) {
+  if (percent > 100) percent = 100;
+  TIM3->CCR1 = (TIM3->ARR * percent) / 100;
+  TIM3->CCR2 = (TIM3->ARR * percent) / 100;
 }
 
 /**

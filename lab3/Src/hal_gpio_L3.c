@@ -22,7 +22,7 @@ void My_HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
     GPIOx->MODER |=  (GPIO_Init->Mode << (pinPos * 2));
 
     // OTYPER
-    if (GPIO_Init->Mode == GPIO_MODE_OUTPUT_PP)
+    if (GPIO_Init->Mode == GPIO_MODE_OUTPUT_PP || GPIO_Init->Mode == GPIO_MODE_AF_PP)
         GPIOx->OTYPER &= ~(1U << pinPos);
     else
         GPIOx->OTYPER |=  (1U << pinPos);
@@ -34,6 +34,9 @@ void My_HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
     // PUPDR
     GPIOx->PUPDR &= ~(3U << (pinPos * 2));
     GPIOx->PUPDR |=  (GPIO_Init->Pull << (pinPos * 2));
+
+    //GPIOx->AFR[0] &= ~(0xFFFFFFFF);
+    GPIOx->AFR[0] |= (GPIO_Init->Alternate << (pinPos * 4));
 }
 
 

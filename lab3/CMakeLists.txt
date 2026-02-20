@@ -3,7 +3,7 @@ add_executable(lab3
     Src/lab3.c
     Src/stm32f0xx_hal_msp.c
     Src/stm32f0xx_it.c
-    Src/tim2_config.c
+    Src/tim_config.c
     Src/hal_gpio_L3.c
 )
 
