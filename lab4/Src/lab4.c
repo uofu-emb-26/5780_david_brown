@@ -13,10 +13,34 @@ int main(void)
   HAL_Init();
   /* Configure the system clock */
   SystemClock_Config();
+  
+  usartConfig();
 
+  GPIO_InitTypeDef pinA0Init = {GPIO_PIN_0, GPIO_MODE_INPUT,
+                                GPIO_PULLDOWN, GPIO_SPEED_FREQ_LOW};
+  HAL_GPIO_Init(GPIOA, &pinA0Init);
+
+  GPIO_InitTypeDef initCStr = {GPIO_PIN_6, GPIO_MODE_OUTPUT_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
+
+  GPIO_InitTypeDef initBStr = {GPIO_PIN_10 | GPIO_PIN_11, GPIO_MODE_AF_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW, GPIO_AF4_USART3};
+
+  HAL_GPIO_Init(GPIOC, &initCStr);
+
+  HAL_GPIO_Init(GPIOB, &initBStr);
+
+  uint8_t prevState = 0;
+  uint8_t currState = 0;
   while (1)
   {
- 
+    currState = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+    if(currState && !prevState) {
+      transmitChar('a');
+    }
+    prevState = currState;
+
+    HAL_Delay(30); // Delay 30ms 
   }
   return -1;
 }
@@ -67,6 +91,25 @@ void Error_Handler(void)
   while (1)
   {
   }
+}
+
+void usartConfig(void) {
+  RCC->APB1ENR |= RCC_APB1ENR_USART3EN;
+  RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN ;
+
+  USART3->BRR = HAL_RCC_GetHCLKFreq() / 115200;
+
+  USART3->CR1 |= USART_CR1_RE | USART_CR1_TE | USART_CR1_UE;
+}
+
+void transmitChar(char sc) {
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);
+  while(!(USART3->ISR & USART_ISR_TXE)) {
+    // wait until transmit data register is empty
+  }
+  USART3->TDR = sc;
+  //HAL_Delay(500);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
 }
 
 #ifdef USE_FULL_ASSERT
