@@ -8,7 +8,8 @@ extern "C" {
 void Error_Handler(void);
 
 // Configure usart peripherals for lab4.
-void usartConfig(void);
+void usartConfigP1(void);
+void usartConfigP2(void);
 void transmitChar(char sc);
 void transmitString(char* str);
 

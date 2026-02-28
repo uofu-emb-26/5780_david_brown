@@ -1,7 +1,11 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
+#include "string.h"
 
 void SystemClock_Config(void);
+
+char* data = NULL;
+int newDataFlag = 0;
 
 /**
   * @brief  The application entry point.
@@ -14,7 +18,8 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
   
-  usartConfig();
+  // usartConfigP1();
+  usartConfigP2();
 
   // UserButton Initialization
   GPIO_InitTypeDef pinA0Init = {GPIO_PIN_0, GPIO_MODE_INPUT,
@@ -33,35 +38,120 @@ int main(void)
 
   HAL_GPIO_Init(GPIOC, &initCStr);
 
+  __NVIC_EnableIRQ(USART3_4_IRQn);
+  __NVIC_SetPriority(USART3_4_IRQn, 1);
+
   uint8_t prevState = 0;
   uint8_t currState = 0;
   while (1)
   {
-    currState = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+    // CheckOff 1
+    // currState = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+    // if(currState && !prevState) {
+    //   transmitChar('A');
+    //   transmitString(" string is an array of chars in c. ");
+    // }
+    // prevState = currState;
+
+    // if(USART3->ISR & USART_ISR_RXNE) {
+    //   if (USART3->RDR == 'r') {    // RED LED
+    //     HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+    //   }
+    //   else if (USART3->RDR == 'b') {   // BLUE LED
+    //     HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
+    //   }
+    //   else if (USART3->RDR == 'o') {   // ORANGE LED
+    //     HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+    //   }
+    //   else if (USART3->RDR == 'g') {   // GREEN LED
+    //     HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
+    //   }
+    //   else {
+    //     transmitString("Error: Enter a valid input. ");
+    //   }
+    // }
+    //HAL_Delay(30); // Delay 30ms 
+
+    // prevState = currState;
+    // Checkoff 2
+    currState = newDataFlag;
     if(currState && !prevState) {
-      transmitChar('A');
-      transmitString(" string is an array of chars in c. ");
+       transmitString("CMD? ");
     }
     prevState = currState;
-
-    if(USART3->ISR & USART_ISR_RXNE) {
-      if (USART3->RDR == 'r') {
+    if(newDataFlag) {
+      // RED LED
+      if (data != NULL && strcmp(data, "r0\n") == 0) {
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
+        transmitString("Turn off Red. ");
+        transmitString("CMD? ");
+      }
+      else if (data != NULL && strcmp(data, "r1\n") == 0) {
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);
+        transmitString("Turn on Red. ");
+        transmitString("CMD? ");
+      }
+      else if (data != NULL && strcmp(data, "r2\n") == 0) {
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+        transmitString("Toggle Red. ");
+        transmitString("CMD? ");
       }
-      else if (USART3->RDR == 'b') {
+
+      // BLUE LED
+      else if (data != NULL && strcmp(data, "b0\n") == 0) {
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+        transmitString("Turn off Blue. ");
+        transmitString("CMD? ");
+      }
+      else if (data != NULL && strcmp(data, "b1\n") == 0) {
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+        transmitString("Turn on Blue. ");
+        transmitString("CMD? ");
+      }
+      else if (data != NULL && strcmp(data, "b2\n") == 0) {
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
+        transmitString("Toggle Blue. ");
+        transmitString("CMD? ");
       }
-      else if (USART3->RDR == 'o') {
+
+      // ORANGE LED
+      else if (data != NULL && strcmp(data, "o0\n") == 0) {
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
+        transmitString("Turn off Orange. ");
+        transmitString("CMD? ");
+      }
+      else if (data != NULL && strcmp(data, "o1\n") == 0) {
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+        transmitString("Turn on Orange. ");
+        transmitString("CMD? ");
+      }
+      else if (data != NULL && strcmp(data, "o2\n") == 0) {
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+        transmitString("Toggle Orange. ");
+        transmitString("CMD? ");
       }
-      else if (USART3->RDR == 'g') {
+
+      // GREEN LED
+      else if (data != NULL && strcmp(data, "g0\n") == 0) {
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
+        transmitString("Turn off Green. ");
+        transmitString("CMD? ");
+      }
+      else if (data != NULL && strcmp(data, "g1\n") == 0) {
+        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+        transmitString("Turn on Green. ");
+        transmitString("CMD? ");
+      }
+      else if (data != NULL && strcmp(data, "g2\n") == 0) {
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
+        transmitString("Toggle Green. ");
+        transmitString("CMD? ");
       }
       else {
-        transmitString("Error: Enter a valid input. ");
+        transmitString("Error: Enter a valid input. \n");
       }
     }
-    //HAL_Delay(30); // Delay 30ms 
+
   }
   return -1;
 }
@@ -114,13 +204,28 @@ void Error_Handler(void)
   }
 }
 
-void usartConfig(void) {
+void usartConfigP1(void) {
   RCC->APB1ENR |= RCC_APB1ENR_USART3EN;
   RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN ;
 
   USART3->BRR = HAL_RCC_GetHCLKFreq() / 115200;
 
   USART3->CR1 |= USART_CR1_RE | USART_CR1_TE | USART_CR1_UE;
+}
+
+void usartConfigP2(void) {
+  RCC->APB1ENR |= RCC_APB1ENR_USART3EN;
+  RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN ;
+
+  USART3->BRR = HAL_RCC_GetHCLKFreq() / 115200;
+
+  USART3->CR1 |= USART_CR1_RE | USART_CR1_TE | USART_CR1_UE | USART_CR1_RXNEIE;
+}
+
+void USART3_4_IRQHandler(void) {
+  data += USART3->RDR;
+  if(USART3->RDR == '\n')
+    newDataFlag = USART3->ISR & USART_ISR_RXNE;
 }
 
 void transmitChar(char sc) {
