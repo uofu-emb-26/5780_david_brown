@@ -16,19 +16,22 @@ int main(void)
   
   usartConfig();
 
+  // UserButton Initialization
   GPIO_InitTypeDef pinA0Init = {GPIO_PIN_0, GPIO_MODE_INPUT,
                                 GPIO_PULLDOWN, GPIO_SPEED_FREQ_LOW};
   HAL_GPIO_Init(GPIOA, &pinA0Init);
 
-  GPIO_InitTypeDef initCStr = {GPIO_PIN_6, GPIO_MODE_OUTPUT_PP,
-                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
-
+  // Transmit/Reciever Initialization
   GPIO_InitTypeDef initBStr = {GPIO_PIN_10 | GPIO_PIN_11, GPIO_MODE_AF_PP,
                                 GPIO_NOPULL, GPIO_SPEED_FREQ_LOW, GPIO_AF4_USART3};
 
-  HAL_GPIO_Init(GPIOC, &initCStr);
-
   HAL_GPIO_Init(GPIOB, &initBStr);
+
+  // LED's Initialization
+  GPIO_InitTypeDef initCStr = {GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9, GPIO_MODE_OUTPUT_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
+
+  HAL_GPIO_Init(GPIOC, &initCStr);
 
   uint8_t prevState = 0;
   uint8_t currState = 0;
@@ -37,11 +40,28 @@ int main(void)
     currState = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
     if(currState && !prevState) {
       transmitChar('A');
-      transmitString(" string is an array of chars in c.");
+      transmitString(" string is an array of chars in c. ");
     }
     prevState = currState;
 
-    HAL_Delay(30); // Delay 30ms 
+    if(USART3->ISR & USART_ISR_RXNE) {
+      if (USART3->RDR == 'r') {
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+      }
+      else if (USART3->RDR == 'b') {
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
+      }
+      else if (USART3->RDR == 'o') {
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+      }
+      else if (USART3->RDR == 'g') {
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
+      }
+      else {
+        transmitString("Error: Enter a valid input. ");
+      }
+    }
+    //HAL_Delay(30); // Delay 30ms 
   }
   return -1;
 }
@@ -104,13 +124,10 @@ void usartConfig(void) {
 }
 
 void transmitChar(char sc) {
-  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);
   while(!(USART3->ISR & USART_ISR_TXE)) {
     // wait until transmit data register is empty
   }
   USART3->TDR = sc;
-  //HAL_Delay(500);
-  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
 }
 
 void transmitString(char* str){
