@@ -10,6 +10,7 @@ void Error_Handler(void);
 // Configure usart peripherals for lab4.
 void usartConfig(void);
 void transmitChar(char sc);
+void transmitString(char* str);
 
 #ifdef __cplusplus
 }

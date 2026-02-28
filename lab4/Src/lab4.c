@@ -36,7 +36,8 @@ int main(void)
   {
     currState = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
     if(currState && !prevState) {
-      transmitChar('a');
+      transmitChar('A');
+      transmitString(" string is an array of chars in c.");
     }
     prevState = currState;
 
@@ -103,13 +104,20 @@ void usartConfig(void) {
 }
 
 void transmitChar(char sc) {
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);
+  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);
   while(!(USART3->ISR & USART_ISR_TXE)) {
     // wait until transmit data register is empty
   }
   USART3->TDR = sc;
   //HAL_Delay(500);
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
+  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
+}
+
+void transmitString(char* str){
+  while(*str) {
+    transmitChar(*str);
+    str++;
+  }
 }
 
 #ifdef USE_FULL_ASSERT
