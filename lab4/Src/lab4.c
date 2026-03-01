@@ -4,8 +4,9 @@
 
 void SystemClock_Config(void);
 
-char* data = NULL;
-int newDataFlag = 0;
+char data[4];
+int dataIndex;
+int newDataFlag;
 
 /**
   * @brief  The application entry point.
@@ -42,7 +43,7 @@ int main(void)
   __NVIC_SetPriority(USART3_4_IRQn, 1);
 
   uint8_t prevState = 0;
-  uint8_t currState = 0;
+  uint8_t currState = 1;
   while (1)
   {
     // CheckOff 1
@@ -74,75 +75,85 @@ int main(void)
 
     // prevState = currState;
     // Checkoff 2
-    currState = newDataFlag;
+    
     if(currState && !prevState) {
        transmitString("CMD? ");
+       currState = 0;
     }
-    prevState = currState;
     if(newDataFlag) {
+      char cmd[4];
+
+      __disable_irq();
+      if (dataIndex >= sizeof(data)) 
+        dataIndex = sizeof(data)-1;
+      memcpy(cmd, (const void*)data, sizeof(cmd));
+      dataIndex = 0;
+      newDataFlag = 0;
+      __enable_irq();
+
       // RED LED
-      if (data != NULL && strcmp(data, "r0\n") == 0) {
+      if (strcmp(cmd, "r0\r") == 0) {
         HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
         transmitString("Turn off Red. ");
         transmitString("CMD? ");
       }
-      else if (data != NULL && strcmp(data, "r1\n") == 0) {
+      else if (strcmp(cmd, "r1\r") == 0) {
         HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);
         transmitString("Turn on Red. ");
         transmitString("CMD? ");
       }
-      else if (data != NULL && strcmp(data, "r2\n") == 0) {
+      else if (strcmp(cmd, "r2\r") == 0) {
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
         transmitString("Toggle Red. ");
         transmitString("CMD? ");
       }
 
       // BLUE LED
-      else if (data != NULL && strcmp(data, "b0\n") == 0) {
+      else if (strcmp(cmd, "b0\r") == 0) {
         HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
         transmitString("Turn off Blue. ");
         transmitString("CMD? ");
       }
-      else if (data != NULL && strcmp(data, "b1\n") == 0) {
+      else if (strcmp(cmd, "b1\r") == 0) {
         HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
         transmitString("Turn on Blue. ");
         transmitString("CMD? ");
       }
-      else if (data != NULL && strcmp(data, "b2\n") == 0) {
+      else if (strcmp(cmd, "b2\r") == 0) {
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
         transmitString("Toggle Blue. ");
         transmitString("CMD? ");
       }
 
       // ORANGE LED
-      else if (data != NULL && strcmp(data, "o0\n") == 0) {
+      else if (strcmp(cmd, "o0\r") == 0) {
         HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
         transmitString("Turn off Orange. ");
         transmitString("CMD? ");
       }
-      else if (data != NULL && strcmp(data, "o1\n") == 0) {
+      else if (strcmp(cmd, "o1\r") == 0) {
         HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
         transmitString("Turn on Orange. ");
         transmitString("CMD? ");
       }
-      else if (data != NULL && strcmp(data, "o2\n") == 0) {
+      else if (strcmp(cmd, "o2\r") == 0) {
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
         transmitString("Toggle Orange. ");
         transmitString("CMD? ");
       }
 
       // GREEN LED
-      else if (data != NULL && strcmp(data, "g0\n") == 0) {
+      else if (strcmp(cmd, "g0\r") == 0) {
         HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
         transmitString("Turn off Green. ");
         transmitString("CMD? ");
       }
-      else if (data != NULL && strcmp(data, "g1\n") == 0) {
+      else if (strcmp(cmd, "g1\r") == 0) {
         HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
         transmitString("Turn on Green. ");
         transmitString("CMD? ");
       }
-      else if (data != NULL && strcmp(data, "g2\n") == 0) {
+      else if (strcmp(cmd, "g2\r") == 0) {
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
         transmitString("Toggle Green. ");
         transmitString("CMD? ");
@@ -223,9 +234,28 @@ void usartConfigP2(void) {
 }
 
 void USART3_4_IRQHandler(void) {
-  data += USART3->RDR;
-  if(USART3->RDR == '\n')
-    newDataFlag = USART3->ISR & USART_ISR_RXNE;
+  if(USART3->ISR & USART_ISR_RXNE) {
+    char ch = USART3->RDR;
+    if(dataIndex < sizeof(data)-1) 
+      data[dataIndex++] = ch;
+    else {
+      dataIndex = 0;
+    }
+
+    if(ch == '\r') {
+      if (dataIndex >= 1) {
+        if (dataIndex <= sizeof(data)-1) {
+          data[dataIndex] = '\0';
+        } else {
+          data[sizeof(data)-1] = '\0';
+        }
+      } else {
+        data[0] = '\0';
+      }
+      newDataFlag = 1;
+    } 
+  }
+  
 }
 
 void transmitChar(char sc) {

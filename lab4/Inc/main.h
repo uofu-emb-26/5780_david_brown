@@ -13,6 +13,8 @@ void usartConfigP2(void);
 void transmitChar(char sc);
 void transmitString(char* str);
 
+void USART3_4_IRQHandler(void);
+
 #ifdef __cplusplus
 }
 #endif
