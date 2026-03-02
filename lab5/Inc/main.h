@@ -6,6 +6,8 @@ extern "C" {
 #endif
 
 void Error_Handler(void);
+void setGPIO(void);
+void initI2C(void);
 
 #ifdef __cplusplus
 }

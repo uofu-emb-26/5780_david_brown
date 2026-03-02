@@ -19,7 +19,7 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
   
-  // usartConfigP1();
+  //usartConfigP1();
   usartConfigP2();
 
   // UserButton Initialization
