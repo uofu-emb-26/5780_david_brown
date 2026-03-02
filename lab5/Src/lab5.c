@@ -86,7 +86,13 @@ void setGPIO(void) {
 }
 
 void initI2C(void) {
+  RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;
+  // Set the parameters in the TIMING register to use 100kHz standard-mode I2C
+                    // PRESC     // SCLL  // SCLH       // SDADEL     // SCLDEL
+  I2C2->TIMINGR |= (0x1 << 28) | (0x13) | (0xF << 8) | (0x2 << 16) | (0x4 << 20); 
 
+  // Enable the I2C Peripheral using the PE bit in the CR1 register.
+  I2C2->CR1 |= I2C_CR1_PE;
 }
 
 /**
