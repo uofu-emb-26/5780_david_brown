@@ -1,5 +1,6 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
+#include "stm32f0xx_hal_gpio_ex.h"
 
 void SystemClock_Config(void);
 
@@ -54,6 +55,38 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+void setGPIO(void) {
+
+  // Enable GPIOB and GPIOC in RCC
+  RCC->AHBENR |= RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN;
+
+  // Set PB11 to alternate function mode, open-drain output.
+  // Set I2C2_SDA as it alternate function
+  GPIO_InitTypeDef pinB11Init = {GPIO_PIN_11, GPIO_MODE_AF_OD,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW, GPIO_AF1_I2C2};
+  HAL_GPIO_Init(GPIOB, &pinB11Init);
+
+  // Set PB13 to alternate function mode, open-drain output.
+  // Set I2C2_SDA as it alternate function
+  GPIO_InitTypeDef pinB13Init = {GPIO_PIN_13, GPIO_MODE_AF_OD,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW, GPIO_AF5_I2C2};
+  HAL_GPIO_Init(GPIOB, &pinB13Init);
+
+  // Set PB14 to push pull output type and set high
+  GPIO_InitTypeDef pinB14Init = {GPIO_PIN_14, GPIO_MODE_OUTPUT_PP};
+  HAL_GPIO_Init(GPIOB, &pinB14Init);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+
+  // Set C0 to push pull output type and set high
+  GPIO_InitTypeDef pinC0Init = {GPIO_PIN_0, GPIO_MODE_OUTPUT_PP};
+  HAL_GPIO_Init(GPIOC, &pinC0Init);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
+}
+
+void initI2C(void) {
+
 }
 
 /**
