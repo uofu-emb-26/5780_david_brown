@@ -14,10 +14,57 @@ int main(void)
   HAL_Init();
   /* Configure the system clock */
   SystemClock_Config();
+  setGPIO();
+  initI2C();
 
   while (1)
   {
- 
+    // Wait until either the TXIS flag is set or the NACKF flag is set
+    while(!((I2C2->ISR & I2C_ISR_TXIS) | (I2C2->ISR & I2C_ISR_NACKF))) {
+
+    }
+    if(I2C2->ISR & I2C_ISR_NACKF) {
+      // send debug message
+    }
+    // SET TXDR to the address of teh WHO AM I register
+    if(I2C2->ISR & I2C_ISR_TXIS) {
+      I2C2->TXDR = 0x0f;
+    }
+
+    // Wait until the TC flag is set
+    while(!(I2C2->ISR & I2C_ISR_TC)) {
+
+    }
+    // Reload CR2 register
+    if(I2C2->ISR & I2C_ISR_TC) {
+                // SADD = 0x69    // Transmit 1 byte. // Set Start bit    // Read Operation
+      I2C2->CR2 = (0x69 << 1) |  (0x1 << 16) |       I2C_CR2_START        | I2C_CR2_RD_WRN;
+    }
+
+    // Wait until either of the RXNE or NACKF flags are set
+    while(!((I2C2->ISR & I2C_ISR_RXNE) | (I2C2->ISR & I2C_ISR_NACKF))) {
+
+    }
+    if(I2C2->ISR & I2C_ISR_NACKF) {
+      // send debug message
+    }
+    while(!(I2C2->ISR & I2C_ISR_TC)) {
+
+    }
+    // Check contents of WHO_AM_I register
+    if(I2C2->RXDR & 0xD3) {
+      // success
+      HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
+      HAL_Delay(500);
+    }
+    else {
+      // failure
+      HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+      HAL_Delay(500);
+    }
+
+    I2C2->CR2 |= I2C_CR2_STOP;
+    
   }
   return -1;
 }
@@ -83,9 +130,16 @@ void setGPIO(void) {
   GPIO_InitTypeDef pinC0Init = {GPIO_PIN_0, GPIO_MODE_OUTPUT_PP};
   HAL_GPIO_Init(GPIOC, &pinC0Init);
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
+
+  // LED Initialization
+  GPIO_InitTypeDef initCStr = {GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9, GPIO_MODE_OUTPUT_PP,
+                                GPIO_NOPULL, GPIO_SPEED_FREQ_LOW};
+
+  HAL_GPIO_Init(GPIOC, &initCStr);
 }
 
 void initI2C(void) {
+  // Exercise 5.3
   RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;
   // Set the parameters in the TIMING register to use 100kHz standard-mode I2C
                     // PRESC     // SCLL  // SCLH       // SDADEL     // SCLDEL
@@ -93,6 +147,12 @@ void initI2C(void) {
 
   // Enable the I2C Peripheral using the PE bit in the CR1 register.
   I2C2->CR1 |= I2C_CR1_PE;
+
+  // Exercise 5.4
+  // Set RD_WRN bit to indicate write operation.
+  I2C2->CR2 &= ~I2C_CR2_RD_WRN;
+              // SADD = 0x69  // Transmit 1 byte. // Set Start bit
+  I2C2->CR2 = (0x69 << 1) |  (0x1 << 16) |       I2C_CR2_START;
 }
 
 /**
