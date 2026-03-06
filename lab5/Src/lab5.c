@@ -16,54 +16,23 @@ int main(void)
   SystemClock_Config();
   setGPIO();
   initI2C();
+  uint8_t who = readRegisterI2C(0x69, 0x0f);
+
+    if(who == 0xD3)   // exact match is better than bit mask
+    {
+        for(int i = 0; i < 9; i++) {
+            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
+            HAL_Delay(500);
+        }
+    }
+    else
+    {
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+        HAL_Delay(500);
+    }
 
   while (1)
   {
-    // Wait until either the TXIS flag is set or the NACKF flag is set
-    while(!((I2C2->ISR & I2C_ISR_TXIS) | (I2C2->ISR & I2C_ISR_NACKF))) {
-
-    }
-    if(I2C2->ISR & I2C_ISR_NACKF) {
-      // send debug message
-    }
-    // SET TXDR to the address of teh WHO AM I register
-    if(I2C2->ISR & I2C_ISR_TXIS) {
-      I2C2->TXDR = 0x0f;
-    }
-
-    // Wait until the TC flag is set
-    while(!(I2C2->ISR & I2C_ISR_TC)) {
-
-    }
-    // Reload CR2 register
-    if(I2C2->ISR & I2C_ISR_TC) {
-                // SADD = 0x69    // Transmit 1 byte. // Set Start bit    // Read Operation
-      I2C2->CR2 = (0x69 << 1) |  (0x1 << 16) |       I2C_CR2_START        | I2C_CR2_RD_WRN;
-    }
-
-    // Wait until either of the RXNE or NACKF flags are set
-    while(!((I2C2->ISR & I2C_ISR_RXNE) | (I2C2->ISR & I2C_ISR_NACKF))) {
-
-    }
-    if(I2C2->ISR & I2C_ISR_NACKF) {
-      // send debug message
-    }
-    while(!(I2C2->ISR & I2C_ISR_TC)) {
-
-    }
-    // Check contents of WHO_AM_I register
-    if(I2C2->RXDR & 0xD3) {
-      // success
-      HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
-      HAL_Delay(500);
-    }
-    else {
-      // failure
-      HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-      HAL_Delay(500);
-    }
-
-    I2C2->CR2 |= I2C_CR2_STOP;
     
   }
   return -1;
@@ -153,6 +122,64 @@ void initI2C(void) {
   I2C2->CR2 &= ~I2C_CR2_RD_WRN;
               // SADD = 0x69  // Transmit 1 byte. // Set Start bit
   I2C2->CR2 = (0x69 << 1) |  (0x1 << 16) |       I2C_CR2_START;
+}
+
+void initGyro(void) {
+  
+}
+
+uint8_t readRegisterI2C(uint8_t devAddr, uint8_t regAddr)
+{
+    int data = 0;
+
+    // Configure CR2: Transmit 1 byte (register address), Write mode
+    I2C2->CR2 = (devAddr << 1) | (0x1 << 16) | I2C_CR2_START;
+
+    // Wait until either the TXIS flag is set or the NACKF flag is set
+    while(!((I2C2->ISR & I2C_ISR_TXIS) | (I2C2->ISR & I2C_ISR_NACKF))) {
+
+    }
+
+    if(I2C2->ISR & I2C_ISR_NACKF) {
+        // send debug message
+        return 0;
+    }
+
+    // SET TXDR to the address of teh WHO AM I register
+    if(I2C2->ISR & I2C_ISR_TXIS) {
+        I2C2->TXDR = regAddr;   // Address of requested register
+    }
+
+    // Wait until the TC flag is set
+    while(!(I2C2->ISR & I2C_ISR_TC)) {
+
+    }
+
+    // Reload CR2 register
+    if(I2C2->ISR & I2C_ISR_TC) {
+        // SADD = device address    // Transmit 1 byte. // Set Start bit    // Read Operation
+        I2C2->CR2 = (devAddr << 1) | (0x1 << 16) | I2C_CR2_START | I2C_CR2_RD_WRN;
+    }
+
+    // Wait until either of the RXNE or NACKF flags are set
+    while(!((I2C2->ISR & I2C_ISR_RXNE) | (I2C2->ISR & I2C_ISR_NACKF))) {
+
+    }
+
+    if(I2C2->ISR & I2C_ISR_NACKF) {
+        // send debug message
+        return 0;
+    }
+
+    while(!(I2C2->ISR & I2C_ISR_TC)) {
+
+    }
+
+    data = I2C2->RXDR;
+
+    I2C2->CR2 |= I2C_CR2_STOP;
+
+    return data;
 }
 
 /**
