@@ -16,9 +16,10 @@ int main(void)
   SystemClock_Config();
   setGPIO();
   initI2C();
+  initGyro();
   uint8_t who = readRegisterI2C(0x69, 0x0f);
 
-    if(who == 0xD3)   // exact match is better than bit mask
+    if(who == 0xD3)
     {
         for(int i = 0; i < 9; i++) {
             HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_7);
@@ -33,7 +34,41 @@ int main(void)
 
   while (1)
   {
-    
+    uint8_t xLow  = readRegisterI2C(0x69, 0x28);
+    uint8_t xHigh = readRegisterI2C(0x69, 0x29);
+    uint8_t yLow  = readRegisterI2C(0x69, 0x2A);
+    uint8_t yHigh = readRegisterI2C(0x69, 0x2B);
+
+    int16_t yValue = (yHigh << 8) | yLow;
+    int16_t xValue = (xHigh << 8) | xLow;
+
+    if(xValue > 1000) {
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET); // Set Green
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET); // Reset Orange
+    }
+    else if(xValue < -1000) {
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);   // set orange
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET); // reset green
+    }
+    else {
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET); // reset orange
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET); // reset green
+    }
+
+    if(yValue > 1000) {
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Set red
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET); // Reset blue
+    }
+    else if(yValue < -1000) {
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);   // set blue
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET); // reset red
+    }
+    else {
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET); // reset red
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET); // reset blue
+    }
+
+    HAL_Delay(100);
   }
   return -1;
 }
@@ -125,7 +160,7 @@ void initI2C(void) {
 }
 
 void initGyro(void) {
-  
+  writeRegisterI2C(0x69, 0x20, 0x1 | (0x1 << 1) | (0x1 << 3));
 }
 
 uint8_t readRegisterI2C(uint8_t devAddr, uint8_t regAddr)
@@ -181,6 +216,68 @@ uint8_t readRegisterI2C(uint8_t devAddr, uint8_t regAddr)
 
     return data;
 }
+
+void writeRegisterI2C(uint8_t devAddr, uint8_t regAddr, uint8_t value)
+{
+    // Configure CR2: Transmit 2 bytes (register + data), Write mode
+    I2C2->CR2 = (devAddr << 1) | (0x2 << 16) | I2C_CR2_START;
+
+    // Wait until either the TXIS flag is set or the NACKF flag is set
+    while(!((I2C2->ISR & I2C_ISR_TXIS) | (I2C2->ISR & I2C_ISR_NACKF))) {
+
+    }
+
+    if(I2C2->ISR & I2C_ISR_NACKF) {
+        // send debug message
+        while(1) {
+          HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+          HAL_Delay(500);
+        }
+    }
+
+    // SET TXDR to the address of the WHO AM I register
+    if(I2C2->ISR & I2C_ISR_TXIS) {
+        I2C2->TXDR = regAddr;   // Address of requested register
+    }
+
+    // Wait until either the TXIS flag is set or the NACKF flag is set again
+    while(!((I2C2->ISR & I2C_ISR_TXIS) | (I2C2->ISR & I2C_ISR_NACKF))) {
+
+    }
+
+    if(I2C2->ISR & I2C_ISR_NACKF) {
+        // send debug message
+        while(1) {
+          HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+          HAL_Delay(500);
+        }
+    }
+
+    // SET TXDR to the address of the WHO AM I register
+    if(I2C2->ISR & I2C_ISR_TXIS) {
+        I2C2->TXDR = value;   // Address of requested register
+    }
+
+    // Wait until the TC flag is set
+
+    if(I2C2->ISR & I2C_ISR_NACKF) {
+        // send debug message
+        while(1) {
+          HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+          HAL_Delay(500);
+        }
+        
+    }
+
+    // Wait until the TC flag is set
+    while(!(I2C2->ISR & I2C_ISR_TC)) {
+
+    }
+
+    I2C2->CR2 |= I2C_CR2_STOP;
+}
+
+
 
 /**
   * @brief  This function is executed in case of error occurrence.
