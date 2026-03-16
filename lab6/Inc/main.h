@@ -7,6 +7,8 @@ extern "C" {
 
 void Error_Handler(void);
 void setGPIO(void);
+void configADC(void);
+void configDAC(void);
 
 #include <stdint.h>
 #include <stdio.h>

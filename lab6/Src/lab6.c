@@ -15,11 +15,12 @@ int main(void)
   SystemClock_Config();
 
   setGPIO();
+  configADC();
   uint8_t data = 0;
 
   while (1)
   {
-    while(!(ADC1->ISR & ADC_ISR_EOC)){}
+    //while(!(ADC1->ISR & ADC_ISR_EOC)){}
     data = ADC1->DR;
 
     if(data >= 50) {
@@ -104,14 +105,17 @@ void setGPIO(void) {
 
   // LED Initialization
   GPIO_InitTypeDef initCStr = {GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9, GPIO_MODE_OUTPUT_PP};
+  HAL_GPIO_Init(GPIOC, &initCStr);
+}
 
+void configADC(void) {
   // ADC
   GPIO_InitTypeDef initADC = {GPIO_PIN_0, GPIO_MODE_ANALOG, GPIO_NOPULL};
   HAL_GPIO_Init(GPIOC, &initADC);
 
+  // Enable RCC
   RCC->APB2ENR |= RCC_APB2ENR_ADCEN;
-  HAL_GPIO_Init(GPIOC, &initCStr);
-
+  
   // Continuous conversion mode, hardware triggers disabled, 8-bit resolution
   ADC1->CFGR1 |= ADC_CFGR1_CONT | ADC_CFGR1_RES_1;
 
@@ -129,7 +133,9 @@ void setGPIO(void) {
   }
 
   ADC1->CR |= ADC_CR_ADEN;
-  while (!(ADC1->ISR & ADC_ISR_ADRDY));
+  while (!(ADC1->ISR & ADC_ISR_ADRDY)) {
+    // Wait until ADC is ready before starting
+  } 
   ADC1->CR |= ADC_CR_ADSTART;
 }
 
