@@ -6,6 +6,9 @@ extern "C" {
 #endif
 
 void Error_Handler(void);
+void setGPIO(void);
+
+#include <stdint.h>
 
 #ifdef __cplusplus
 }

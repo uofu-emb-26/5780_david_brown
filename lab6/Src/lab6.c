@@ -14,9 +14,36 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
+  setGPIO();
+  uint8_t data = 0;
+
   while (1)
   {
- 
+    data = ADC1->DR;
+
+    if(data >= 1) {
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);   // Set blue
+    }
+    else
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);   // Reset blue
+    
+    if(data >= 1.5) {
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);   // Set orange
+    }
+    else
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);   // Reset orange
+    
+    if(data >= 2) {
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Set red
+    }
+    else
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET); // Reset red
+
+    if(data >= 3) {
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET); // Set Green
+    }
+    else
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET); // Reset Green 
   }
   return -1;
 }
@@ -66,6 +93,38 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+  }
+}
+
+void setGPIO(void) {
+
+  // Enable GPIOB and GPIOC in RCC
+  RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+
+  // LED Initialization
+  GPIO_InitTypeDef initCStr = {GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9, GPIO_MODE_OUTPUT_PP};
+
+  // ADC
+  GPIO_InitTypeDef initADC = {GPIO_PIN_0, GPIO_MODE_ANALOG, GPIO_NOPULL};
+  HAL_GPIO_Init(GPIOC, &initADC);
+
+  RCC->APB2ENR |= RCC_APB2ENR_ADCEN;
+  HAL_GPIO_Init(GPIOC, &initCStr);
+
+  // Continuous conversion mode, hardware triggers disabled, 8-bit resolution
+  ADC1->CFGR1 |= ADC_CFGR1_CONT | ADC_CFGR1_RES_1;
+
+  // Select/enable input pin's channel for ADC conversion. 
+  ADC1->CHSELR = 0x10000000000;    // Channel 10, Connected to PC0
+
+  // Self Calibration
+  ADC1->CR &= ~(ADC_CR_ADEN);   // ENSURE ADEN = 0 and DMAEN = 0
+  ADC1->CFGR1 &= ~(ADC_CFGR1_DMAEN);
+
+  ADC1->CR |= ADC_CR_ADCAL;
+
+  while (ADC1->CR & ADC_CR_ADCAL) {
+    // Wait until ADCAL is 0 before moving on
   }
 }
 
