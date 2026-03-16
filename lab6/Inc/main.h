@@ -9,6 +9,7 @@ void Error_Handler(void);
 void setGPIO(void);
 
 #include <stdint.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 }
