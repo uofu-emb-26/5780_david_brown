@@ -15,37 +15,52 @@ int main(void)
   SystemClock_Config();
 
   setGPIO();
-  configADC();
-  uint8_t data = 0;
+  //configADC();
+  configDAC();
+  //uint8_t data = 0;
 
+  // Sawtooth Wave: 8-bit, 32 samples/cycle
+  const uint8_t sawtooth_table[32] = {0,7,15,23,31,39,47,55,63,71,79,87,95,103,
+  111,119,127,134,142,150,158,166,174,182,190,198,206,214,222,230,238,246};
+
+  uint8_t idx = 0;
   while (1)
   {
+    // Checkoff 6.1
     //while(!(ADC1->ISR & ADC_ISR_EOC)){}
-    data = ADC1->DR;
+    // data = ADC1->DR;
 
-    if(data >= 50) {
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);   // Set blue
-    }
-    else
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);   // Reset blue
+    // if(data >= 50) {
+    //   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);   // Set blue
+    // }
+    // else
+    //   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);   // Reset blue
     
-    if(data >= 100) {
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);   // Set orange
-    }
-    else
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);   // Reset orange
+    // if(data >= 100) {
+    //   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);   // Set orange
+    // }
+    // else
+    //   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);   // Reset orange
     
-    if(data >= 150) {
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Set red
-    }
-    else
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET); // Reset red
+    // if(data >= 150) {
+    //   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Set red
+    // }
+    // else
+    //   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET); // Reset red
 
-    if(data >= 200) {
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET); // Set Green
+    // if(data >= 200) {
+    //   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET); // Set Green
+    // }
+    // else
+    //   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET); // Reset Green 
+
+    // Checkoff 6.2
+    if(idx == 32) {
+      idx = 0;
     }
-    else
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET); // Reset Green 
+    DAC->DHR8R1 = sawtooth_table[idx];
+    idx++;
+    HAL_Delay(1);
   }
   return -1;
 }
@@ -137,6 +152,20 @@ void configADC(void) {
     // Wait until ADC is ready before starting
   } 
   ADC1->CR |= ADC_CR_ADSTART;
+}
+
+void configDAC(void) {
+  // DAC Channel 1
+  RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+  RCC->APB1ENR|= RCC_APB1ENR_DACEN;
+  GPIO_InitTypeDef initDAC = {GPIO_PIN_4, GPIO_MODE_ANALOG, GPIO_NOPULL};
+  HAL_GPIO_Init(GPIOA, &initDAC);
+ 
+
+  // Set to software trigger mode. Enable channel 1
+  DAC->CR |= DAC_CR_TSEL1 | DAC_CR_EN1;// | DAC_CR_TEN1;
+  //DAC->SWTRIGR |= 1;
+
 }
 
 #ifdef USE_FULL_ASSERT
