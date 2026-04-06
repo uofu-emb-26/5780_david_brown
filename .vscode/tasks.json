@@ -6,9 +6,6 @@
       "type": "process",
       "command": "openocd",
       "args": [
-        // You may need to set this path argument
-        // "-s",
-        // "/usr/share/opencd/scripts",
         "-f",
         "interface/stlink.cfg",
         "-f",
@@ -36,6 +33,14 @@
       "windows": {
         "command": "cube"
       }
+    },
+    {
+      "type": "cmake",
+      "label": "CMake: test",
+      "command": "test",
+      "preset": "__defaultTestPreset__",
+      "problemMatcher": [],
+      "detail": "CMake template test task"
     }
   ]
 }
