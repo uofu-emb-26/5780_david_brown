@@ -24,7 +24,8 @@
             "name": "RTT graphing",
             "request": "launch",
             "type": "cortex-debug",
-            "openOCDLaunchCommands": [],
+            "armToolchainPath": "/home/u1359199/tools/bin",
+            "serverpath": "/home/u1359199/xpack-openocd-0.12.0-7/bin/openocd",
             "servertype": "openocd",
             "configFiles": [
                 "board/stm32f0discovery.cfg"

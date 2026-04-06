@@ -2,6 +2,8 @@
 add_executable(lab7
     Src/lab7.c
     Src/motor.c
+    Src/SEGGER_RTT.c
+    Src/SEGGER_RTT_printf.c
     Src/stm32f0xx_hal_msp.c
     Src/stm32f0xx_it.c
 )
@@ -16,12 +18,12 @@ target_include_directories(lab7 PRIVATE
 
 # Add project symbols (macros)
 target_compile_definitions(lab7 PRIVATE
+    LAB7
 )
 
 # Add linked libraries
 target_link_libraries(lab7
     STM32_Drivers
-    SEGGER_RTT
 )
 
 flash_target(lab7)

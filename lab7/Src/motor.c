@@ -14,8 +14,8 @@ volatile int16_t target_rpm;    // Desired speed target
 volatile int16_t motor_speed;   // Measured motor speed
 volatile int8_t adc_value;      // ADC measured motor current
 volatile int16_t error;         // Speed error signal
-volatile uint8_t Kp;            // Proportional gain
-volatile uint8_t Ki;            // Integral gain
+volatile uint8_t Kp = 1;            // Proportional gain
+volatile uint8_t Ki = 1;            // Integral gain
 
 static uint8_t buf0[1024];
 static uint8_t buf1[1024];
@@ -147,11 +147,12 @@ void TIM6_DAC_IRQHandler(void) {
      * Note the motor speed is signed! Motor can be run in reverse.
      * Speed is measured by how far the counter moved from center point
      */
-    motor_speed = (TIM3->CNT - 0x7FFF);
+    motor_speed = -(TIM3->CNT - 0x7FFF);
     TIM3->CNT = 0x7FFF; // Reset back to center point
 
     // Call the PI update function
     PI_update();
+    log_data();
 
     TIM6->SR &= ~TIM_SR_UIF;        // Acknowledge the interrupt
 }
@@ -197,7 +198,7 @@ void PI_update(void) {
     __disable_irq();
     /// TODO: calculate error signal and write to "error" variable
 
-    error = ((target_rpm * 8) / 10) - motor_speed;
+    error = (target_rpm*8/10) - motor_speed;
     /* Hint: Remember that your calculated motor speed may not be directly in RPM!
      *       You will need to convert the target or encoder speeds to the same units.
      *       I recommend converting to whatever units result in larger values, gives

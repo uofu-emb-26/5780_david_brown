@@ -1,58 +1,44 @@
+#include "stm32f0xx_it.h"
 #include "main.h"
 #include "stm32f0xx_hal.h"
-#include "stm32f0xx_it.h"
+
+void Lab7_SysTick_Handler(void);
 
 /******************************************************************************/
 /*           Cortex-M0 Processor Interruption and Exception Handlers          */
 /******************************************************************************/
 /**
-  * @brief This function handles Non maskable interrupt.
-  */
-void NMI_Handler(void)
-{
-   while (1)
-  {
+ * @brief This function handles Non maskable interrupt.
+ */
+void NMI_Handler(void) {
+  while (1) {
   }
 }
 
 /**
-  * @brief This function handles Hard fault interrupt.
-  */
-void HardFault_Handler(void)
-{
-  while (1)
-  {
+ * @brief This function handles Hard fault interrupt.
+ */
+void HardFault_Handler(void) {
+  while (1) {
   }
 }
 
 /**
-  * @brief This function handles System service call via SWI instruction.
-  */
-void SVC_Handler(void)
-{
-}
+ * @brief This function handles System service call via SWI instruction.
+ */
+void SVC_Handler(void) {}
 
 /**
-  * @brief This function handles Pendable request for system service.
-  */
-void PendSV_Handler(void)
-{
-}
+ * @brief This function handles Pendable request for system service.
+ */
+void PendSV_Handler(void) {}
 
 /**
-  * @brief This function handles System tick timer.
-  */
-void SysTick_Handler(void)
-{
-  /* USER CODE BEGIN SysTick_IRQn 0 */
+ * @brief This function handles System tick timer.
+ */
+void SysTick_Handler(void) {
   HAL_IncTick();
-  #if defined(LAB7)
   Lab7_SysTick_Handler();
-  #endif
-  /* USER CODE END SysTick_IRQn 0 */
-  /* USER CODE BEGIN SysTick_IRQn 1 */
-  /* USER CODE END SysTick_IRQn 1 */
-
 }
 
 /******************************************************************************/
@@ -61,4 +47,3 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f0xx.s).                    */
 /******************************************************************************/
-
